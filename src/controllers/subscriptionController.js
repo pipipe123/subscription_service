@@ -1,6 +1,8 @@
 const { query } = require('../config/database');
 const config = require('../config');
-const stripe = require('stripe')(config.stripeSecretKey);
+const stripe = config.stripeSecretKey
+  ? require('stripe')(config.stripeSecretKey)
+  : null;
 const { publishEvent } = require('../services/rabbitmq');
 
 // GET /subscription/plans — público
@@ -19,6 +21,9 @@ const getPlans = async (req, res) => {
 // POST /subscription/checkout — privado
 const createCheckout = async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe no está configurado' });
+    }
     const { plan_id } = req.body;
 
     if (!plan_id) {
@@ -102,6 +107,9 @@ const getHistory = async (req, res) => {
 // POST /subscription/cancel — privado
 const cancelSubscription = async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe no está configurado' });
+    }
     const { rows } = await query(
       `SELECT * FROM subscriptions
        WHERE user_id = $1 AND status = 'active'
@@ -136,6 +144,9 @@ const cancelSubscription = async (req, res) => {
 
 // POST /subscription/webhook — webhook de Stripe (sin auth, body raw)
 const handleWebhook = async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({ error: 'Stripe no está configurado' });
+  }
   const sig = req.headers['stripe-signature'];
 
   let event;

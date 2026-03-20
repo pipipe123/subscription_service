@@ -33,7 +33,13 @@ const startConsumers = async () => {
   });
 };
 
-startConsumers().catch((err) => console.error('Failed to start consumers:', err.message));
+if (config.rabbitmqEnabled && config.rabbitmqUrl) {
+  startConsumers()
+    .then(() => console.log('RabbitMQ consumers activos'))
+    .catch((err) => console.error('Failed to start consumers:', err.message));
+} else {
+  console.warn('RabbitMQ deshabilitado');
+}
 
 app.listen(config.port, () => {
   console.log(`Subscription Service running on port ${config.port} [${config.nodeEnv}]`);

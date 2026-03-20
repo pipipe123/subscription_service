@@ -2,7 +2,11 @@ const { Pool } = require('pg');
 const config = require('./index');
 
 const pool = new Pool({
-  connectionString: config.databaseUrl,
+  host: config.db.host,
+  port: config.db.port,
+  database: config.db.name,
+  user: config.db.user,
+  password: config.db.password,
 });
 
 pool.on('connect', () => {
